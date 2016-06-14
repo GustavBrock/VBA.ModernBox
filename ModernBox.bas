@@ -3,8 +3,9 @@ Option Compare Database
 Option Explicit
 
 ' Complete modern/metro styled replacement for MsgBox and InputBox.
-' 2016-04-16. Gustav Brock, Cactus Data ApS, CPH.
+' 2016-05-10. Gustav Brock, Cactus Data ApS, CPH.
 ' Version 1.0.2: ErrorMox added.
+' Version 1.0.3: DoCmd.SelectObject inserted to bring form to front of other popup forms.
 '
 ' License: MIT.
 
@@ -94,7 +95,7 @@ End Function
 
 Public Function MsgMox( _
     Prompt As String, _
-    Optional Buttons As VbMsgBoxStyle = vbOKOnly, _
+    Optional Buttons As VbMsgBoxStyle = vbOkOnly, _
     Optional Title As Variant = Null, _
     Optional HelpFile As String, _
     Optional Context As Long, _
@@ -159,7 +160,7 @@ Public Function ErrorMox( _
         Prompt = Prompt & CStr(Err.Number) & vbCrLf & _
             Err.Description & "."
         
-        Buttons = vbOKOnly + vbCritical
+        Buttons = vbOkOnly + vbCritical
         MsgMox Prompt, Buttons, Title
         
         ' Clear status line.
@@ -209,12 +210,16 @@ Public Function OpenFormDialog( _
             ' Open modal form in non-dialogue mode to prevent dialogue borders to be displayed.
             DoCmd.OpenForm FormName, acNormal, , , , acWindowNormal, OpenArgs
         End If
+        
         ' Record launch time and current time with 1/18 second resolution.
         LaunchTime = Date + CDate(Timer / SecondsPerDay)
         Do While CurrentProject.AllForms(FormName).IsLoaded
             ' Form FormName is open.
+            ' Bring form to front; it may hide behind a popup form.
+            DoCmd.SelectObject acForm, FormName
             ' Make sure form and form actions are rendered.
             DoEvents
+        
             ' Halt Access for 1/20 second.
             ' This will typically cause a CPU load less than 1%.
             ' Looping faster will raise CPU load dramatically.
@@ -287,7 +292,7 @@ Public Function ApplicationTitle() As String
         End If
     Next
     If Title = "" Then
-        Title = StrConv(StrReverse(Split(StrReverse(CurrentProject.Name), ".", 2)(1)), vbProperCase)
+        Title = strConv(StrReverse(Split(StrReverse(CurrentProject.Name), ".", 2)(1)), vbProperCase)
     End If
     
     ApplicationTitle = Title
@@ -308,4 +313,3 @@ Public Sub StatusLineReset()
     SysCmd acSysCmdClearStatus
 
 End Sub
-
