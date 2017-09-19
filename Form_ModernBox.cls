@@ -14,13 +14,16 @@ Option Explicit
 ' To be called from function MsgMox of module ModernBox.
 '
 ' 2015-01-26. (c) Gustav Brock, Cactus Data ApS, CPH.
-' Version 1.0.1
+' Version 1.0.2
 ' License: MIT.
 '
 ' Requirements:
 '   Function StyleCommandButtons of module ModernStyle.
 '
 ' 2015-04-18: Added replace of & to && to prevent underscores in prompt.
+' 2017-09-19: Added limitation of the settings for WindowsLeft and WindowsTop
+'             to be within the range of Integer.
+
 
 ' Constants.
 
@@ -364,6 +367,10 @@ Private Sub FormMove(Button As Integer, Shift As Integer, X As Single, Y As Sing
 
 ' Move the form by dragging the title bar or the label upon it.
 
+    ' WindowLeft and WindowTop must be within the range of Integer.
+    Const TopLeftMax        As Single = 2 ^ 15 - 1
+    Const TopLeftMin        As Single = -2 ^ 15
+
     ' Statics to hold the position of the form when mouse is clicked.
     Static PositionX        As Single
     Static PositionY        As Single
@@ -384,7 +391,17 @@ Private Sub FormMove(Button As Integer, Shift As Integer, X As Single, Y As Sing
                 ' Calculate new form position.
                 WindowTop = Me.WindowTop + Y - PositionY
                 WindowLeft = Me.WindowLeft + X - PositionX
-                ' Reposition form.
+                ' Limit Top and Left.
+                If WindowTop > TopLeftMax Then
+                    WindowTop = TopLeftMax
+                ElseIf WindowTop < TopLeftMin Then
+                    WindowTop = TopLeftMax
+                End If
+                If WindowLeft > TopLeftMax Then
+                    WindowLeft = TopLeftMax
+                ElseIf WindowLeft < TopLeftMin Then
+                    WindowLeft = TopLeftMax
+                End If
                 Me.Move WindowLeft, WindowTop
             End If
         End If
@@ -481,7 +498,7 @@ Private Sub SetButtonSequence()
             ActiveButtonCount = ButtonCount.OKCancel
             Buttons(FirstButton) = Array(True, Captions(ButtonCaption.ButtonOK), VbMsgBoxResult.vbOK)
             Buttons(FirstButton + 1) = Array(True, Captions(ButtonCaption.ButtonCancel), VbMsgBoxResult.vbCancel)
-        Case vbOKOnly
+        Case vbOkOnly
             ' Note: Any click action (except Help) will result in Cancel.
             ActiveButtonCount = ButtonCount.OKOnly
             Buttons(FirstButton) = Array(True, Captions(ButtonCaption.ButtonOK), VbMsgBoxResult.vbCancel)
@@ -667,7 +684,7 @@ Private Sub SetMsgBoxStyle()
         (Style And vbDefaultButton1) Or (Style And vbDefaultButton2) Or (Style And vbDefaultButton3) Or (Style And vbDefaultButton4)
     ButtonSequence = _
         (Style And vbAbortRetryIgnore) Or _
-        (Style And vbOKCancel) Or (Style And vbOKOnly) Or (Style And vbRetryCancel) Or _
+        (Style And vbOKCancel) Or (Style And vbOkOnly) Or (Style And vbRetryCancel) Or _
         (Style And vbYesNo) Or (Style And vbYesNoCancel)
     HelpButton = _
         (Style And vbMsgBoxHelpButton)

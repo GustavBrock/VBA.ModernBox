@@ -21,6 +21,8 @@ Option Explicit
 '   Function StyleCommandButtons of module ModernStyle.
 '
 ' 2015-04-18: Added replace of & to && to prevent underscores in prompt.
+' 2017-09-19: Added limitation of the settings for WindowsLeft and WindowsTop
+'             to be within the range of Integer.
 
 
 ' Constants.
@@ -348,6 +350,10 @@ Private Sub FormMove(Button As Integer, Shift As Integer, X As Single, Y As Sing
 
 ' Move the form by dragging the title bar or the label upon it.
 
+    ' WindowLeft and WindowTop must be within the range of Integer.
+    Const TopLeftMax        As Single = 2 ^ 15 - 1
+    Const TopLeftMin        As Single = -2 ^ 15
+
     ' Statics to hold the position of the form when mouse is clicked.
     Static PositionX        As Single
     Static PositionY        As Single
@@ -368,7 +374,17 @@ Private Sub FormMove(Button As Integer, Shift As Integer, X As Single, Y As Sing
                 ' Calculate new form position.
                 WindowTop = Me.WindowTop + Y - PositionY
                 WindowLeft = Me.WindowLeft + X - PositionX
-                ' Reposition form.
+                ' Limit Top and Left.
+                If WindowTop > TopLeftMax Then
+                    WindowTop = TopLeftMax
+                ElseIf WindowTop < TopLeftMin Then
+                    WindowTop = TopLeftMax
+                End If
+                If WindowLeft > TopLeftMax Then
+                    WindowLeft = TopLeftMax
+                ElseIf WindowLeft < TopLeftMin Then
+                    WindowLeft = TopLeftMax
+                End If
                 Me.Move WindowLeft, WindowTop
             End If
         End If
