@@ -9,7 +9,7 @@ Also contains a prebuilt error box for use in error handling.
 
 ![General](https://raw.githubusercontent.com/GustavBrock/VBA.ModernBox/master/images/ModBox.png)
 
-![General](https://raw.githubusercontent.com/GustavBrock/VBA.ModernBox/master/images/InputBox.png)
+![General](https://raw.githubusercontent.com/GustavBrock/VBA.ModernBox/master/images/InputMox.png)
 
 ![General](https://raw.githubusercontent.com/GustavBrock/VBA.ModernBox/master/images/ErrorMox.png)
 
