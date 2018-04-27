@@ -3,9 +3,12 @@ Option Compare Database
 Option Explicit
 
 ' Complete modern/metro styled replacement for MsgBox and InputBox.
-' 2016-05-10. Gustav Brock, Cactus Data ApS, CPH.
+' 2018-04-26. Gustav Brock, Cactus Data ApS, CPH.
 ' Version 1.0.2: ErrorMox added.
 ' Version 1.0.3: DoCmd.SelectObject inserted to bring form to front of other popup forms.
+' Version 1.2.0: Modified API calls to 32/64-bit.
+'                HTML Help function and API declarations moved to separate module HtmlHelp.
+'                Preparations for Windows 10 version made.
 '
 ' License: MIT.
 
@@ -16,6 +19,7 @@ Option Explicit
 '   Module:
 '       ModernStyle
 '       ModernThemeColours
+'       HtmlHelp
 
 
 ' Global variables for forms ModernBox and ModputBox.
@@ -41,30 +45,15 @@ Private Const ModernBoxName As String = "ModernBox"
 Private Const ModputBoxName As String = "ModputBox"
 
 ' API call for sleep function.
-Private Declare Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
+#If VBA7 Then
+    Private Declare PtrSafe Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
+#Else
+    Private Declare Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
+#End If
+'
 
-' API function to open a compiled HTML help file (.chm) with the HTML Help Viewer.
-' Note: The help file must reside on a local drive.
-' Sample help file for download:
-' http://www.innovasys.com/download/examplechmzipfile?ZipFile=%2FStatic%2FHS%2FSamples%2FHelpStudioSample_CHM.zip
-Private Declare Function HTMLHelpShowContents Lib "hhctrl.ocx" Alias "HtmlHelpA" ( _
-    ByVal hwnd As Long, _
-    ByVal lpHelpFile As String, _
-    ByVal wCommand As Long, _
-    ByVal dwData As Long) _
-    As Long
-
-Public Function InputMox( _
-    Prompt As String, _
-    Optional Title As Variant = Null, _
-    Optional Default As String, _
-    Optional XPos As Variant = Null, _
-    Optional YPos As Variant = Null, _
-    Optional HelpFile As String, _
-    Optional Context As Long, _
-    Optional TimeOut As Long) _
-    As String
-    
+' Opens an input box, using form ModputBox, similar to VBA.InputBox.
+'
 ' Syntax. As for InputBox with an added parameter, TimeOut:
 ' InputMox(Prompt, [Title], [Default], [XPos], [YPos], [HelpFile], [Context], [TimeOut]) As VbMsgBoxResult
 '
@@ -76,6 +65,19 @@ Public Function InputMox( _
 '   InputMox waits forever as InputBox.
 ' If TimeOut is positive:
 '   InputMox exits after TimeOut milliseconds, returning an empty string.
+'
+' 2018-04-26. Gustav Brock, Cactus Data ApS, CPH.
+'
+Public Function InputMox( _
+    Prompt As String, _
+    Optional Title As Variant = Null, _
+    Optional Default As String, _
+    Optional XPos As Variant = Null, _
+    Optional YPos As Variant = Null, _
+    Optional HelpFile As String, _
+    Optional Context As Long, _
+    Optional TimeOut As Long) _
+    As String
     
     ' Set global variables to be read by form ModernBox.
     mbPrompt = Prompt
@@ -93,6 +95,18 @@ Public Function InputMox( _
 
 End Function
 
+' Opens a message box, using form ModernBox, similar to VBA.MsgBox.
+'
+' Syntax. As for MsgBox with an added parameter, TimeOut:
+' MsgMox(Prompt, [Buttons As VbMsgBoxStyle = vbOKOnly], [Title], [HelpFile], [Context], [TimeOut]) As VbMsgBoxResult
+'
+' If TimeOut is negative, zero, or missing:
+'   MsgMox waits forever as MsgBox.
+' If TimeOut is positive:
+'   MsgMox exits after TimeOut milliseconds, returning the result of the current default button.
+'
+' 2018-04-26. Gustav Brock, Cactus Data ApS, CPH.
+'
 Public Function MsgMox( _
     Prompt As String, _
     Optional Buttons As VbMsgBoxStyle = vbOkOnly, _
@@ -101,14 +115,6 @@ Public Function MsgMox( _
     Optional Context As Long, _
     Optional TimeOut As Long) _
     As VbMsgBoxResult
-    
-' Syntax. As for MsgBox with an added parameter, TimeOut:
-' MsgMox(Prompt, [Buttons As VbMsgBoxStyle = vbOKOnly], [Title], [HelpFile], [Context], [TimeOut]) As VbMsgBoxResult
-'
-' If TimeOut is negative, zero, or missing:
-'   MsgMox waits forever as MsgBox.
-' If TimeOut is positive:
-'   MsgMox exits after TimeOut milliseconds, returning the result of the current default button.
     
     ' Set global variables to be read by form ModernBox.
     mbButtons = Buttons
@@ -124,13 +130,15 @@ Public Function MsgMox( _
 
 End Function
 
+' Opens a MsgMox predefined for displaying the error number, source, and description if Err <> 0.
+' Also reestablishes the application window, if Echo is False, and the cursor, if Hourglass is True,
+' and resets the Status line.
+'
+' 2018-04-26. Gustav Brock, Cactus Data ApS, CPH.
+'
 Public Function ErrorMox( _
     Optional ByVal Topic As String) _
     As String
-
-' Opens a MsgMox predefined for displaying the error number, source, and description if Err <> 0.
-' Also reestablishes the application window if Echo is False, the cursor if Hourglass is True,
-' and resets the Status line.
 
     ' Text to prefix the error number.
     Const Prefix    As String = "Error"
@@ -174,20 +182,22 @@ Public Function ErrorMox( _
 
 End Function
 
-Public Function OpenFormDialog( _
-    ByVal FormName As String, _
-    Optional ByVal TimeOut As Long, _
-    Optional ByVal OpenArgs As Variant = Null) _
-    As Boolean
-    
-' Open a modal form in non-dialogue mode to prevent dialogue borders to be displayed
+' Opens a modal form in non-dialogue mode to prevent dialogue borders to be displayed
 ' while simulating dialogue behaviour using Sleep.
 
 ' If TimeOut is negative, zero, or missing:
 '   Form FormName waits forever.
 ' If TimeOut is positive:
 '   Form FormName exits after TimeOut milliseconds.
-    
+'
+' 2018-04-26. Gustav Brock, Cactus Data ApS, CPH.
+'
+Public Function OpenFormDialog( _
+    ByVal FormName As String, _
+    Optional ByVal TimeOut As Long, _
+    Optional ByVal OpenArgs As Variant = Null) _
+    As Boolean
+        
     Const SecondsPerDay     As Single = 86400
     
     Dim LaunchTime          As Date
@@ -244,12 +254,21 @@ Public Function OpenFormDialog( _
 
 End Function
 
+' Open a help file at context ContextID if found.
+'
+' Note:
+'   An opened help viewer window must be closed before exiting the application,
+'   or, most likely, Access will chrash.
+'
+' Requires:
+'   HtmlHelp
+'
+' 2018-04-26. Gustav Brock, Cactus Data ApS, CPH.
+'
 Public Function OpenHelp( _
-    ByVal HelpPath As String, _
+    ByVal HelpFile As String, _
     Optional ByVal ContextID As Long = 1) _
     As Boolean
-    
-' Open a help file at context ContextID if found.
     
     Const MinimumContextID  As Long = 1
     
@@ -262,15 +281,32 @@ Public Function OpenHelp( _
     
     ' Open help file.
     ' Fails silently if help file or context ID is not found.
-    Success = CBool(HTMLHelpShowContents(0, HelpPath, &HF, ContextID))
+    Success = HelpControl(OpenContext, HelpFile, ContextID)
     
     OpenHelp = Success
     
 End Function
 
-Public Function ApplicationTitle() As String
+' Close all open HTML Help Viewer windows.
+'
+' Requires:
+'   HtmlHelp
+'
+' 2018-04-26. Gustav Brock, Cactus Data ApS, CPH.
+'
+Public Function CloseHelp() As Boolean
+    
+    Dim Success             As Boolean
+    
+    ' Close help file.
+    ' Fails silently if no Help Viewer windows are open.
+    Success = HelpControl(CloseAll)
+    
+    CloseHelp = Success
+    
+End Function
 
-' Returns the CurrentDb property "AppTitle" if set.
+' Returns in Access the CurrentDb property "AppTitle" if set.
 ' If not found, the sanitised application file name is returned.
 '
 ' Example:
@@ -279,6 +315,13 @@ Public Function ApplicationTitle() As String
 '
 '   No AppTitle. Filename is "super app.accdb".
 '   Returns: Super App
+'
+' Requires a reference to:
+'   Microsoft Office nn.m Access database engine Object Library
+'
+' 2018-04-26. Gustav Brock, Cactus Data ApS, CPH.
+'
+Public Function ApplicationTitle() As String
     
     Const AppTitle  As String = "AppTitle"
     
@@ -292,24 +335,62 @@ Public Function ApplicationTitle() As String
         End If
     Next
     If Title = "" Then
-        Title = strConv(StrReverse(Split(StrReverse(CurrentProject.Name), ".", 2)(1)), vbProperCase)
+        Title = StrConv(StrReverse(Split(StrReverse(CurrentProject.Name), ".", 2)(1)), vbProperCase)
     End If
     
     ApplicationTitle = Title
 
 End Function
 
-Public Sub StatusLineReset()
-
 ' Removes a custom status line message and displays the default messages of Access.
 '
-' SysCmd(acSysCmdClearStatus) cannot be used unconditionally as it will fail if
+' SysCmd(acSysCmdClearStatus) cannot be used unconditionally, as it will fail if
 ' SysCmd(acSysCmdSetStatus, "Some message") has not been called, and because
 ' SysCmd(acSysCmdSetStatus, "") (an empty string) always will fail.
+' Thus, first set a blank message is set to make sure a message has been set.
+'
+' 2018-04-26. Gustav Brock, Cactus Data ApS, CPH.
+'
+Public Sub StatusLineReset()
 
-    ' Thus, first set a blank message to make sure a message has been set.
+    ' Set a blank message to make sure a message has been set.
     SysCmd acSysCmdSetStatus, " "
     ' Clear (reset) the status line.
     SysCmd acSysCmdClearStatus
 
 End Sub
+
+' Checks if the primary (current) Windows version is Windows 10.
+' Returns True if Windows version is 10, False if not.
+'
+' The call to WMI takes about 50 ms. Thus, to speed up repeated calls,
+' the result is kept in the static variable OsVersion.
+'
+' 2018-04-07. Gustav Brock, Cactus Data ApS, CPH.
+'
+Public Function IsWindows10() As Boolean
+
+    Const NoVersion     As Integer = 0
+    Const Version10     As Integer = 10
+    
+    Static OsVersion    As Integer
+    
+    Dim OperatingSystem As Object
+    Dim Result          As Boolean
+
+    If OsVersion = NoVersion Then
+        ' Connect to WMI and obtain instances of Win32_OperatingSystem
+        For Each OperatingSystem In GetObject("winmgmts:").InstancesOf("Win32_OperatingSystem")
+            If OperatingSystem.Primary = True Then
+                OsVersion = Val(OperatingSystem.Version)
+                Exit For
+            End If
+        Next
+    Else
+        ' Repeated call. OsVersion has previously been found.
+    End If
+    Result = (OsVersion = Version10)
+    
+    IsWindows10 = Result
+
+End Function

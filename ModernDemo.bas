@@ -21,3 +21,19 @@ Err_ErrorDemo:
     
 End Sub
 
+Public Sub HelpDemo()
+
+    Const HelpFile = "c:\test\samplehelp.chm"
+    Const Context   As Long = 2
+    
+    Dim Result      As VbMsgBoxResult
+    
+    Result = MsgMox("Press Help", vbQuestion + vbOKCancel + vbMsgBoxHelpButton, "Help Demo", HelpFile, Context)
+    ' Close the help window, should it have been opened.
+    CloseHelp
+    ' Or call CloseHelp before exiting the application.
+    
+    Debug.Print Result
+    
+End Sub
+

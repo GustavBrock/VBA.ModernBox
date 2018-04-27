@@ -13,8 +13,8 @@ Option Explicit
 ' Modern/Metro styled inputbox to replace InputBox.
 ' To be called from function InputMox of module ModernBox.
 '
-' 2015-01-26. (c) Gustav Brock, Cactus Data ApS, CPH.
-' Version 1.0.1
+' 2018-04-26. (c) Gustav Brock, Cactus Data ApS, CPH.
+' Version 1.2.0
 ' License: MIT.
 '
 ' Requirements:
@@ -23,6 +23,7 @@ Option Explicit
 ' 2015-04-18: Added replace of & to && to prevent underscores in prompt.
 ' 2017-09-19: Added limitation of the settings for WindowsLeft and WindowsTop
 '             to be within the range of Integer.
+' 2018-04-19: Modified API calls to 32/64-bit.
 
 
 ' Constants.
@@ -113,35 +114,48 @@ Private InputText                       As String
 ' API calls.
 
 ' API functions for retrieval of localized button captions.
-Private Declare Function LoadString Lib "user32" Alias "LoadStringA" ( _
-    ByVal hInstance As Long, _
-    ByVal wID As Long, _
-    ByVal lpBuffer As String, _
-    ByVal nBufferMax As Long) _
-    As Long
-         
-Private Declare Function LoadLibrary Lib "kernel32" Alias "LoadLibraryA" ( _
-    ByVal lpFileName As String) _
-    As Long
+#If VBA7 Then
+    Private Declare PtrSafe Function LoadString Lib "user32" Alias "LoadStringA" ( _
+        ByVal hInstance As LongPtr, _
+        ByVal wID As Long, _
+        ByVal lpBuffer As String, _
+        ByVal nBufferMax As Long) _
+        As Long
+             
+    Private Declare PtrSafe Function LoadLibrary Lib "kernel32" Alias "LoadLibraryA" ( _
+        ByVal lpFileName As String) _
+        As LongPtr
+#Else
+    Private Declare Function LoadString Lib "user32" Alias "LoadStringA" ( _
+        ByVal hInstance As Long, _
+        ByVal wID As Long, _
+        ByVal lpBuffer As String, _
+        ByVal nBufferMax As Long) _
+        As Long
+             
+    Private Declare Function LoadLibrary Lib "kernel32" Alias "LoadLibraryA" ( _
+        ByVal lpFileName As String) _
+        As Long
+#End If
 
-Private Sub BoxTitle_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub BoxTitle_MouseDown(Button As Integer, Shift As Integer, x As Single, Y As Single)
     
     ' Enable dragging of the form.
-    Call FormMove(Button, Shift, X, Y, MouseDown)
+    Call FormMove(Button, Shift, x, Y, MouseDown)
 
 End Sub
 
-Private Sub BoxTitle_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub BoxTitle_MouseMove(Button As Integer, Shift As Integer, x As Single, Y As Single)
 
     ' Drag the form if dragging is enabled.
-    Call FormMove(Button, Shift, X, Y, MouseMove)
+    Call FormMove(Button, Shift, x, Y, MouseMove)
 
 End Sub
 
-Private Sub BoxTitle_MouseUp(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub BoxTitle_MouseUp(Button As Integer, Shift As Integer, x As Single, Y As Single)
 
     ' Disable dragging of the form.
-    Call FormMove(Button, Shift, X, Y, MouseUp)
+    Call FormMove(Button, Shift, x, Y, MouseUp)
 
 End Sub
 
@@ -187,24 +201,24 @@ Private Sub ButtonCancel_Click()
     
 End Sub
 
-Private Sub LabelTitle_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub LabelTitle_MouseDown(Button As Integer, Shift As Integer, x As Single, Y As Single)
 
     ' Enable dragging of the form.
-    Call FormMove(Button, Shift, X, Y, MouseDown)
+    Call FormMove(Button, Shift, x, Y, MouseDown)
 
 End Sub
 
-Private Sub LabelTitle_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub LabelTitle_MouseMove(Button As Integer, Shift As Integer, x As Single, Y As Single)
 
     ' Drag the form if dragging is enabled.
-    Call FormMove(Button, Shift, X, Y, MouseMove)
+    Call FormMove(Button, Shift, x, Y, MouseMove)
 
 End Sub
 
-Private Sub LabelTitle_MouseUp(Button As Integer, Shift As Integer, X As Single, Y As Single)
+Private Sub LabelTitle_MouseUp(Button As Integer, Shift As Integer, x As Single, Y As Single)
 
     ' Disable dragging of the form.
-    Call FormMove(Button, Shift, X, Y, MouseUp)
+    Call FormMove(Button, Shift, x, Y, MouseUp)
 
 End Sub
 
@@ -289,9 +303,14 @@ Private Sub FillCaptions()
     Const FileName          As String = "user32.dll"
     Const BufferMax         As Long = 256
     
+#If VBA7 Then
+    Dim Instance            As LongPtr
+#Else
+    Dim Instance            As Long
+#End If
+    
     Dim Buffer              As String
     Dim StringLength        As Long
-    Dim Instance            As Long
     Dim CaptionId           As Long
     
     Instance = LoadLibrary(FileName)
@@ -345,7 +364,7 @@ Private Function FormExtend( _
 
 End Function
 
-Private Sub FormMove(Button As Integer, Shift As Integer, X As Single, Y As Single, _
+Private Sub FormMove(Button As Integer, Shift As Integer, x As Single, Y As Single, _
     ByVal MouseAction As MouseAction)
 
 ' Move the form by dragging the title bar or the label upon it.
@@ -373,7 +392,7 @@ Private Sub FormMove(Button As Integer, Shift As Integer, X As Single, Y As Sing
             If Button = acLeftButton Then
                 ' Calculate new form position.
                 WindowTop = Me.WindowTop + Y - PositionY
-                WindowLeft = Me.WindowLeft + X - PositionX
+                WindowLeft = Me.WindowLeft + x - PositionX
                 ' Limit Top and Left.
                 If WindowTop > TopLeftMax Then
                     WindowTop = TopLeftMax
@@ -396,7 +415,7 @@ Private Sub FormMove(Button As Integer, Shift As Integer, X As Single, Y As Sing
             If MouseAction = MouseDown Then
                 ' MouseDown.
                 ' Store cursor start position.
-                PositionX = X
+                PositionX = x
                 PositionY = Y
                 MoveEnabled = True
             Else
@@ -449,7 +468,6 @@ Private Function PromptLineCount() As Integer
     Dim Lines               As Variant
     Dim Line                As Integer
     Dim LineCount           As Integer
-    Dim HeightDelta         As Long
     
     ' Replace individual Cr or Lf with CrLf in prompt.
     Prompt = Replace(Replace(Replace(mbPrompt, vbCrLf, vbNullChar), vbCr, vbNullChar), vbLf, vbNullChar)
