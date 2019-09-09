@@ -65,4 +65,4 @@ Full documentation is found here:
 
 <p>
 
-![BuyMeACoffee](https://raw.githubusercontent.com/GustavBrock/VBA.ModernBox/master/images/BuyMeACoffee.png)
+[<img src="https://raw.githubusercontent.com/GustavBrock/VBA.ModernBox/master/images/BuyMeACoffee.png">](https://www.buymeacoffee.com/gustav/)
