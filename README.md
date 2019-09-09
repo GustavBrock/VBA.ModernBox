@@ -60,6 +60,7 @@ Full documentation is found here:
 [Modern/Metro style message box and input box for Microsoft Access 2013+](https://www.experts-exchange.com/articles/17684/Modern-Metro-style-message-box-and-input-box-for-Microsoft-Access-2013.html)
 
 <hr>
-*If you wish to support my work or need extended support or advice, feel free to:*<p>
+*If you wish to support my work or need extended support or advice, feel free to:*
+<p>
 
 ![BuyMeACoffee](https://raw.githubusercontent.com/GustavBrock/VBA.ModernBox/master/images/BuyMeACoffee.png)
