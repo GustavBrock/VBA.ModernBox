@@ -13,8 +13,8 @@ Option Explicit
 ' Modern/Metro styled messagebox to replace MsgBox.
 ' To be called from function MsgMox of module ModernBox.
 '
-' 2018-04-26. (c) Gustav Brock, Cactus Data ApS, CPH.
-' Version 1.2.0
+' 2020-02-17. (c) Gustav Brock, Cactus Data ApS, CPH.
+' Version 1.3.1
 ' License: MIT.
 '
 ' Requirements:
@@ -24,6 +24,7 @@ Option Explicit
 ' 2017-09-19: Added limitation of the settings for WindowsLeft and WindowsTop
 '             to be within the range of Integer.
 ' 2018-04-19: Modified API calls to 32/64-bit.
+' 2020-02-16: Added Windows 10 design for use under Windows 10.
 
 
 ' Constants.
@@ -37,6 +38,8 @@ Private Const Position0         As Long = 8503
 Private Const PositionDelta     As Long = 1700
 ' Additional form height for each prompt line exceeding the default count of lines.
 Private Const HeightDelta       As Long = 301
+' Offset for Windows 10 style.
+Private Const Windows10Offset   As Long = 96
 
 ' Icon characters.
 Private Const CharCritical      As String = "×"
@@ -114,6 +117,9 @@ Private PromptRight                     As VbMsgBoxStyle
 ' Button assigned as help button.
 Private HelpButtonIndex                 As Long
 
+' Shall cancel button (close button of form) be hidden.
+Private NoCancel                        As Boolean
+
 ' Variable for result value to return.
 Private Result                          As VbMsgBoxResult
 
@@ -145,24 +151,32 @@ Private Result                          As VbMsgBoxResult
         As Long
 #End If
 
-Private Sub BoxTitle_MouseDown(Button As Integer, Shift As Integer, x As Single, Y As Single)
+Private Sub BoxInactive_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+
+    Call SetCloseButton(False)
+
+End Sub
+
+Private Sub BoxTitle_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
     
     ' Enable dragging of the form.
-    Call FormMove(Button, Shift, x, Y, MouseDown)
+    Call FormMove(Button, Shift, X, Y, MouseDown)
 
 End Sub
 
-Private Sub BoxTitle_MouseMove(Button As Integer, Shift As Integer, x As Single, Y As Single)
+Private Sub BoxTitle_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
 
+    Call SetCloseButton(False)
+    
     ' Drag the form if dragging is enabled.
-    Call FormMove(Button, Shift, x, Y, MouseMove)
+    Call FormMove(Button, Shift, X, Y, MouseMove)
 
 End Sub
 
-Private Sub BoxTitle_MouseUp(Button As Integer, Shift As Integer, x As Single, Y As Single)
-
+Private Sub BoxTitle_MouseUp(Button As Integer, Shift As Integer, X As Single, Y As Single)
+    
     ' Disable dragging of the form.
-    Call FormMove(Button, Shift, x, Y, MouseUp)
+    Call FormMove(Button, Shift, X, Y, MouseUp)
 
 End Sub
 
@@ -220,29 +234,39 @@ Private Sub ButtonCancel_Click()
     
 End Sub
 
-Private Sub LabelTitle_MouseDown(Button As Integer, Shift As Integer, x As Single, Y As Single)
+Private Sub ButtonCancel_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+
+    Call SetCloseButton(True)
+    
+End Sub
+
+Private Sub LabelTitle_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
 
     ' Enable dragging of the form.
-    Call FormMove(Button, Shift, x, Y, MouseDown)
+    Call FormMove(Button, Shift, X, Y, MouseDown)
 
 End Sub
 
-Private Sub LabelTitle_MouseMove(Button As Integer, Shift As Integer, x As Single, Y As Single)
+Private Sub LabelTitle_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
 
+    Call SetCloseButton(False)
+    
     ' Drag the form if dragging is enabled.
-    Call FormMove(Button, Shift, x, Y, MouseMove)
+    Call FormMove(Button, Shift, X, Y, MouseMove)
 
 End Sub
 
-Private Sub LabelTitle_MouseUp(Button As Integer, Shift As Integer, x As Single, Y As Single)
+Private Sub LabelTitle_MouseUp(Button As Integer, Shift As Integer, X As Single, Y As Single)
 
     ' Disable dragging of the form.
-    Call FormMove(Button, Shift, x, Y, MouseUp)
+    Call FormMove(Button, Shift, X, Y, MouseUp)
 
 End Sub
 
 Private Sub Form_Load()
-
+    
+    ' Adjust top and/or height of some controls.
+    Call SetControlSizes
     ' Apply modern colours to form.
     Call SetColours
     ' Show specified icon.
@@ -251,6 +275,8 @@ Private Sub Form_Load()
 End Sub
 
 Private Sub Form_Open(Cancel As Integer)
+
+    Dim NoCancel    As Boolean
 
     ' Set the messagebox style variables.
     Call SetMsgBoxStyle
@@ -261,6 +287,11 @@ Private Sub Form_Open(Cancel As Integer)
     ' Set active buttons and captions and taborder.
     ' Eventually resize form to accommodate buttons and a supersized prompt.
     Call SetButtonSequence
+    ' NoCancel has been set by SetButtonSequence.
+    If Not NoCancel Then
+        ' Set close button status.
+        Call SetCloseButton(False)
+    End If
     
     ' Set default result value.
     Result = vbCancel
@@ -271,6 +302,20 @@ Private Sub Form_Unload(Cancel As Integer)
 
     ' Return result value to global variable.
     mbResult = Result
+
+End Sub
+
+Private Sub PictureCloseActive_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+
+    ' Happens when mouse leaves ButtonCancel as this is slightly smaller than the close pictures.
+    Call SetCloseButton(False)
+    
+End Sub
+
+Private Sub PictureCloseInactive_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+
+    ' Happens when mouse leaves ButtonCancel as this is slightly smaller than the close pictures.
+    Call SetCloseButton(False)
 
 End Sub
 
@@ -381,7 +426,7 @@ Private Function FormExtend( _
 
 End Function
 
-Private Sub FormMove(Button As Integer, Shift As Integer, x As Single, Y As Single, _
+Private Sub FormMove(Button As Integer, Shift As Integer, X As Single, Y As Single, _
     ByVal MouseAction As MouseAction)
 
 ' Move the form by dragging the title bar or the label upon it.
@@ -409,7 +454,7 @@ Private Sub FormMove(Button As Integer, Shift As Integer, x As Single, Y As Sing
             If Button = acLeftButton Then
                 ' Calculate new form position.
                 WindowTop = Me.WindowTop + Y - PositionY
-                WindowLeft = Me.WindowLeft + x - PositionX
+                WindowLeft = Me.WindowLeft + X - PositionX
                 ' Limit Top and Left.
                 If WindowTop > TopLeftMax Then
                     WindowTop = TopLeftMax
@@ -432,7 +477,7 @@ Private Sub FormMove(Button As Integer, Shift As Integer, x As Single, Y As Sing
             If MouseAction = MouseDown Then
                 ' MouseDown.
                 ' Store cursor start position.
-                PositionX = x
+                PositionX = X
                 PositionY = Y
                 MoveEnabled = True
             Else
@@ -491,7 +536,6 @@ Private Sub SetButtonSequence()
     Dim ActiveButtonCount   As Long
     Dim HelpButtonCount     As ButtonCount
     Dim ButtonIndex         As Long
-    Dim NoCancel            As Boolean
     Dim LineCount           As Integer
     
     ' Fill array of localized captions.
@@ -567,14 +611,16 @@ Private Sub SetButtonSequence()
     ' Remove form's close button for certain button combinations.
     If NoCancel = True Then
         Me!ButtonCancel.Enabled = False
-        Me!PictureClose.Visible = False
     Else
         ' Reposition Cancel button and form's close button (picture).
         Me!ButtonCancel.Left = Me!ButtonCancel.Left + WindowExpand
         Me!PictureClose.Left = Me!PictureClose.Left + WindowExpand
+        Me!PictureCloseActive.Left = Me!PictureCloseActive.Left + WindowExpand
+        Me!PictureCloseInactive.Left = Me!PictureCloseInactive.Left + WindowExpand
+        Me!BoxInactive.Left = Me!BoxInactive.Left + WindowExpand
     End If
     
-    ' Extend the form fit a supersized prompt.
+    ' Extend the form to fit a supersized prompt.
     LineCount = PromptLineCount()
     If LineCount > 0 Then
         ' Extend the form and controls (except buttons) to
@@ -599,8 +645,11 @@ Private Sub SetColours()
 ' Set colours of form and basic controls.
 
     ' Set modern colours of components.
+    ' NB! This colour should match the fill colour of the picture PictureCloseInactive.
     Me!BoxTitle.BackColor = wpThemeColor.Cyan
+    Me!BoxInactive.BackColor = wpThemeColor.Steel
     Me!PictureClose.BorderColor = lngBorderColorCloseButton
+    
     ' Set modern colours of form.
     Me.Section(acDetail).BackColor = wpThemeColor.Steel
 
@@ -768,3 +817,40 @@ Private Sub SetTitle()
     Me!LabelTitle.Caption = Title
 
 End Sub
+
+Private Sub SetCloseButton(ByVal Active As Boolean)
+
+    Static Initialized  As Boolean
+    Static Status       As Boolean
+
+    If Not NoCancel Then
+        If IsWindows10 Then
+            If (Not Initialized) Or (Status <> Active) Then
+                Me!PictureCloseActive.Visible = Active
+                Me!PictureCloseInactive.Visible = Not Active
+                Status = Active
+            End If
+        Else
+            If Not Initialized Then
+                Me!PictureClose.Visible = True
+            End If
+        End If
+        
+        Initialized = True
+    End If
+
+End Sub
+
+Private Sub SetControlSizes()
+
+    If IsWindows10 Then
+        Me!BoxTitle.Height = Me!BoxTitle.Height - Windows10Offset
+        Me!LabelTitle.Top = Me!LabelTitle.Top - (Windows10Offset / 2)
+        Me!BoxIcon.Top = Me!BoxIcon.Top - Windows10Offset - 1
+        Me!BoxIcon.Height = Me!BoxIcon.Height + Windows10Offset
+        Me!BoxInactive.Top = Me!BoxInactive.Top - Windows10Offset
+        Me!BoxInactive.Height = Me!BoxInactive.Height + Windows10Offset
+    End If
+    
+End Sub
+

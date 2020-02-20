@@ -1,3 +1,4 @@
+Attribute VB_Name = "ModernThemeColours"
 Option Explicit
 
 ' Adoption of Windows Phone 7.5/8.0 colour theme for VBA.

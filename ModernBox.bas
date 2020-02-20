@@ -3,12 +3,12 @@ Option Compare Database
 Option Explicit
 
 ' Complete modern/metro styled replacement for MsgBox and InputBox.
-' 2018-04-26. Gustav Brock, Cactus Data ApS, CPH.
+' 2020-02-17. Gustav Brock, Cactus Data ApS, CPH.
 ' Version 1.0.2: ErrorMox added.
 ' Version 1.0.3: DoCmd.SelectObject inserted to bring form to front of other popup forms.
 ' Version 1.2.0: Modified API calls to 32/64-bit.
 '                HTML Help function and API declarations moved to separate module HtmlHelp.
-'                Preparations for Windows 10 version made.
+' Version 1.3.1: Added option to check for Windows 10.
 '
 ' License: MIT.
 
@@ -366,7 +366,7 @@ End Sub
 ' The call to WMI takes about 50 ms. Thus, to speed up repeated calls,
 ' the result is kept in the static variable OsVersion.
 '
-' 2018-04-07. Gustav Brock, Cactus Data ApS, CPH.
+' 2019-04-07. Gustav Brock, Cactus Data ApS, CPH.
 '
 Public Function IsWindows10() As Boolean
 
