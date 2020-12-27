@@ -69,7 +69,7 @@ Full documentation is found here:
 
 ![EE Logo](https://raw.githubusercontent.com/GustavBrock/VBA.ModernBox/master/images/EE%20Logo.png)
 
-[Modern/Metro style message box and input box for Microsoft Access 2013+](https://www.experts-exchange.com/articles/17684/Modern-Metro-style-message-box-and-input-box-for-Microsoft-Access-2013.html)
+[Modern/Metro style message box and input box for Microsoft Access 2013+](https://www.experts-exchange.com/articles/17684/Modern-Metro-style-message-box-and-input-box-for-Microsoft-Access-2013.html?preview=4im7XXHqYcs%3D)
 
 <hr>
 
