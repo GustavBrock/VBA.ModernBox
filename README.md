@@ -2,7 +2,7 @@
 
 ### Modern/Metro style message box and input box for Microsoft Access 2013+
 
-Version 1.3.1
+Version 1.3.2
 
 Modern/Metro styled message box and input box that directly can replace MsgBox() and InputBox()in Microsoft Access 2013 and later.
 Also contains a prebuilt error box for use in error handling.
@@ -23,7 +23,7 @@ Also contains a prebuilt error box for use in error handling.
 
 ![General](https://raw.githubusercontent.com/GustavBrock/VBA.ModernBox/master/images/ErrorMox.png)
 
-With version 1.3.1 the visual style of the forms automatically adopts to Windows 10.
+With version 1.3.1 the visual style of the forms automatically adopts to Windows 10 and, apart from the rounded corners, Windows 11.
 
 With version 1.2.0 support has been added for 64-bit Access.
 

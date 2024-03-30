@@ -13,8 +13,8 @@ Option Explicit
 ' Modern/Metro styled messagebox to replace MsgBox.
 ' To be called from function MsgMox of module ModernBox.
 '
-' 2020-02-17. (c) Gustav Brock, Cactus Data ApS, CPH.
-' Version 1.3.1
+' 2024-03-30. (c) Gustav Brock, Cactus Data ApS, CPH.
+' Version 1.3.2
 ' License: MIT.
 '
 ' Requirements:
@@ -25,6 +25,7 @@ Option Explicit
 '             to be within the range of Integer.
 ' 2018-04-19: Modified API calls to 32/64-bit.
 ' 2020-02-16: Added Windows 10 design for use under Windows 10.
+' 2024-03-30: Box BoxInactive sent to back to not cover No button.
 
 
 ' Constants.
