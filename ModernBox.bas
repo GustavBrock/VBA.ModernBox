@@ -3,12 +3,14 @@ Option Compare Database
 Option Explicit
 
 ' Complete modern/metro styled replacement for MsgBox and InputBox.
-' 2020-02-17. Gustav Brock, Cactus Data ApS, CPH.
+' 2024-04-01. Gustav Brock, Cactus Data ApS, CPH.
+'
 ' Version 1.0.2: ErrorMox added.
 ' Version 1.0.3: DoCmd.SelectObject inserted to bring form to front of other popup forms.
 ' Version 1.2.0: Modified API calls to 32/64-bit.
 '                HTML Help function and API declarations moved to separate module HtmlHelp.
-' Version 1.3.1: Added option to check for Windows 10.
+' Version 1.3.1: Added option to check for Windows 10/11.
+' Version 1.3.2: Expanded ErrorMox to list all errors of the Errors collection.
 '
 ' License: MIT.
 
@@ -130,11 +132,11 @@ Public Function MsgMox( _
 
 End Function
 
-' Opens a MsgMox predefined for displaying the error number, source, and description if Err <> 0.
+' Open a MsgMox predefined for displaying the error source and the numbers and descriptions the Error items.
 ' Also reestablishes the application window, if Echo is False, and the cursor, if Hourglass is True,
 ' and resets the Status line.
 '
-' 2018-04-26. Gustav Brock, Cactus Data ApS, CPH.
+' 2024-04-01. Gustav Brock, Cactus Data ApS, CPH.
 '
 Public Function ErrorMox( _
     Optional ByVal Topic As String) _
@@ -143,11 +145,12 @@ Public Function ErrorMox( _
     ' Text to prefix the error number.
     Const Prefix    As String = "Error"
     
+    Dim ErrorItem        As Variant
     Dim Prompt      As String
     Dim Title       As String
     Dim Buttons     As VbMsgBoxStyle
     Dim Message     As String
-    
+
     If Err = 0 Then
         ' No error. Exit.
     Else
@@ -162,16 +165,22 @@ Public Function ErrorMox( _
             Title = Title & ", " & Topic
         End If
         
-        If Prefix <> "" Then
-            Prompt = Prefix & ": "
-        End If
-        Prompt = Prompt & CStr(Err.Number) & vbCrLf & _
-            Err.Description & "."
+        For Each ErrorItem In Errors
+            If Prompt <> "" Then
+                ' Add space between the error messages.
+                Prompt = Prompt & vbCrLf & vbCrLf
+            End If
+            If Prefix <> "" Then
+                Prompt = Prompt & Prefix & ": "
+            End If
+            Prompt = Prompt & CStr(ErrorItem.Number) & " - linje " & Erl & vbCrLf & _
+                ErrorItem.Description
+        Next
         
         Buttons = vbOkOnly + vbCritical
         MsgMox Prompt, Buttons, Title
         
-        ' Clear status line.
+        ' Clear the status line.
         StatusLineReset
         
         ' Return message lines.
@@ -335,7 +344,7 @@ Public Function ApplicationTitle() As String
         End If
     Next
     If Title = "" Then
-        Title = StrConv(StrReverse(Split(StrReverse(CurrentProject.Name), ".", 2)(1)), vbProperCase)
+        Title = strConv(StrReverse(Split(StrReverse(CurrentProject.Name), ".", 2)(1)), vbProperCase)
     End If
     
     ApplicationTitle = Title
